@@ -72,20 +72,16 @@ public class MyTool extends Tool {
         String directoryPath = "evaluate/mariadb_examples";  // 替换为您的SQL文件夹路径
         List<String> allSqlStatements = new ArrayList<>();
         Set<Rule> uniqueRules = new HashSet<>();
-        try {
-            allSqlStatements = getSqlsFromDirectory(directoryPath);
-            for (String sql : allSqlStatements) {
-                /**
-                 * Step 2：如果解析失败，则需要创建新的规则
-                 * Step 3: 将新的规则和原先的规则进行归约
-                 */
-                Rule mergerule = learning_new_rule(sql,rules);
-                if(mergerule!=null) {
-                    uniqueRules.add(mergerule);
-                }
+        allSqlStatements = getSqlsFromDirectory(directoryPath);
+        for (String sql : allSqlStatements) {
+            /**
+             * Step 2：如果解析失败，则需要创建新的规则
+             * Step 3: 将新的规则和原先的规则进行归约
+             */
+            List<Rule> mergerule = learning_new_rule(sql,rules);
+            if(mergerule!=null) {
+                uniqueRules.addAll(mergerule);
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
         /**
          * Step 4:将新的规则写入g4文件
@@ -96,7 +92,8 @@ public class MyTool extends Tool {
         test(rules);
     }
 
-    public Rule learning_new_rule(String sql,List<Rule> rules){
+    public List<Rule> learning_new_rule(String sql,List<Rule> rules){
+        List<Rule> result = new ArrayList<>();
         MySql.MySqlLexer lexer = new MySql.MySqlLexer(CharStreams.fromString(sql));
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         MySql.MySqlParser parser = new MySql.MySqlParser(tokens);
@@ -114,8 +111,11 @@ public class MyTool extends Tool {
          * 从Parser Tree中创建
          */
         if (errorListener.hasError()) {
-            System.out.println("Failed rule : " + sql);
+            System.out.println("Failed sql : " + sql);
             List<String> failedRules = errorListener.getTopRules();
+            System.out.println("Failed Rules : ");
+            for(String s : failedRules)
+                System.out.println("        " + s);
             FailedRuleVisitor failedRuleVisitor = new FailedRuleVisitor(failedRules, parser);
             failedRuleVisitor.visit(tree);  // tree 是你的 ParseTree 对象
 
@@ -133,11 +133,11 @@ public class MyTool extends Tool {
                  * Step 3: 将新的规则和原先的规则进行归约
                  */
                 Rule mergerule = Rule.Reduction(rules,newRule);
+                result.add(mergerule);
                 System.out.println("Mergerule : " + mergerule);
-                return mergerule;
             }
         }
-        return null;
+        return result;
     }
 
 

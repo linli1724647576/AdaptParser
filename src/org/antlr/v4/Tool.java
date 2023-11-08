@@ -154,7 +154,7 @@ public class Tool {
 	 */
 	DefaultToolListener defaultListener = new DefaultToolListener(this);
 
-//	public static void main(String[] args) {
+//	public static void main(String[] args) throws IOException {
 //        Tool antlr = new Tool(args);
 //        if ( args.length == 0 ) { antlr.help(); antlr.exit(0); }
 //
